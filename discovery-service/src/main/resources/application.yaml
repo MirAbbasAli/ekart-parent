@@ -8,4 +8,4 @@ eureka:
     fetch-registry: false
 spring:
   application:
-    name: discoveryService
+    name: discovery-service
