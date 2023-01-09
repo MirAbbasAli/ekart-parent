@@ -7,8 +7,10 @@ import com.ekart.orderservice.dto.OrderLineItemsDto;
 import com.ekart.orderservice.dto.OrderRequest;
 import com.ekart.orderservice.entity.Order;
 import com.ekart.orderservice.entity.OrderLineItems;
+import com.ekart.orderservice.event.OrderPlacedEvent;
 import com.ekart.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,7 +26,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
     private final Tracer tracer;
-
+    private final KafkaTemplate<String, OrderPlacedEvent> kafkaTemplate;
     public String placeOrder(OrderRequest orderRequest){
         Order order=new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
@@ -53,6 +55,8 @@ public class OrderService {
             Boolean allProductsInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::getIsInStock);
             if(allProductsInStock) {
                 orderRepository.save(order);
+                // serialization of data to send in message
+                kafkaTemplate.send("notificationTopic",new OrderPlacedEvent(order.getOrderNumber()));
                 return "Order Placed Successfully";
             }else {
                 throw new IllegalArgumentException("Product not in stock, please try again later");

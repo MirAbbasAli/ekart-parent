@@ -18,6 +18,7 @@ spring:
   sleuth:
     sampler:
       probability: 1.0
+
 eureka:
   client:
     serviceUrl:
@@ -61,4 +62,5 @@ resilience4j:
       inventory:
         maxAttempts: 3
         waitDuration: 5s
+
 
